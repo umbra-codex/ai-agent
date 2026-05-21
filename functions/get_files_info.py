@@ -1,4 +1,5 @@
 import os
+
 from google.genai import types
 
 schema_get_files_info = types.FunctionDeclaration(
@@ -15,20 +16,29 @@ schema_get_files_info = types.FunctionDeclaration(
     ),
 )
 
+
 def get_files_info(working_directory, directory="."):
-  working_dir_abs = os.path.abspath(working_directory)
-  target_dir = os.path.normpath(os.path.join(working_dir_abs, directory))
-  
-  valid_target_dir = os.path.commonpath([working_dir_abs, target_dir]) == working_dir_abs
-  if not valid_target_dir:
-    return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-  
-  if not os.path.isdir(working_dir_abs):
-    return f'Error: "{directory}" is not a directory'
-  
-  lines = []
+    working_dir_abs = os.path.abspath(working_directory)
+    target_dir = os.path.normpath(os.path.join(working_dir_abs, directory))
 
-  for item in os.listdir(target_dir):
-    lines.append(f"- {item}: file_size={os.path.getsize(os.path.join(target_dir, item))} bytes, is_dir={os.path.isdir(os.path.join(target_dir, item))}")
+    valid_target_dir = (
+        os.path.commonpath([working_dir_abs, target_dir]) == working_dir_abs
+    )
+    if not valid_target_dir:
+        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
 
-  return "\n".join(lines) + "\n"
+    if not os.path.isdir(working_dir_abs):
+        return f'Error: "{directory}" is not a directory'
+
+    try:
+        lines = []
+        for item in os.listdir(target_dir):
+            item_path = os.path.join(target_dir, item)
+            lines.append(
+                f"- {item}: file_size={os.path.getsize(item_path)} bytes, is_dir={os.path.isdir(item_path)}"
+            )
+
+        return "\n".join(lines)
+
+    except Exception as ex:
+        return f"Error: {ex}"
